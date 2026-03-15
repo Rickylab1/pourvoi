@@ -10,7 +10,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
   import { getFirestore, collection, addDoc, query, where, orderBy, onSnapshot, doc, setDoc, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -25,7 +25,7 @@
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
-  window._fb = { auth, db, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile, collection, addDoc, query, where, orderBy, onSnapshot, doc, setDoc, getDocs, serverTimestamp };
+  window._fb = { auth, db, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile, sendPasswordResetEmail, collection, addDoc, query, where, orderBy, onSnapshot, doc, setDoc, getDocs, serverTimestamp };
   window.dispatchEvent(new Event('firebase-ready'));
 </script>
 
@@ -331,6 +331,9 @@
       <div class="form-group"><label>Mot de passe</label><input type="password" id="login-password" placeholder="••••••••"></div>
       <button class="btn-primary" onclick="handleLogin()">Se connecter</button>
       <div class="error-msg" id="login-error"></div>
+      <div style="text-align:center;margin-top:0.75rem">
+        <button onclick="handleForgotPassword()" style="background:none;border:none;color:var(--text-muted);font-size:0.82rem;cursor:pointer;text-decoration:underline;font-family:'DM Sans',sans-serif;">Mot de passe oublié ?</button>
+      </div>
     </div>
     <div id="register-form" style="display:none">
       <div class="form-group"><label>Pseudo</label><input type="text" id="reg-username" placeholder="@tonpseudo"></div>
@@ -414,7 +417,21 @@ window.addEventListener('firebase-ready', () => {
   });
 });
 
-function switchTab(tab) {
+async function handleForgotPassword() {
+  const { auth, sendPasswordResetEmail } = window._fb;
+  const email = document.getElementById('login-email').value.trim();
+  if (!email) { document.getElementById('login-error').textContent = 'Entre ton email d\'abord.'; return; }
+  try {
+    await sendPasswordResetEmail(auth, email);
+    document.getElementById('login-error').style.color = '#2ecc71';
+    document.getElementById('login-error').textContent = '✅ Email de réinitialisation envoyé !';
+  } catch(e) {
+    document.getElementById('login-error').style.color = 'var(--accent)';
+    document.getElementById('login-error').textContent = 'Email introuvable.';
+  }
+}
+
+
   document.querySelectorAll('.auth-tab').forEach((t,i) => t.classList.toggle('active',(i===0&&tab==='login')||(i===1&&tab==='register')));
   document.getElementById('login-form').style.display = tab==='login'?'block':'none';
   document.getElementById('register-form').style.display = tab==='register'?'block':'none';
